@@ -7,21 +7,39 @@ import seaborn as sns
 import os
 import requests
 
+def download_file_from_google_drive(file_id, destination):
+    session = requests.Session()
+    url = 'https://drive.google.com/uc?export=download'
+    
+    response = session.get(url, params={'id': file_id}, stream=True)
+    
+    # Handle large file confirmation token
+    token = None
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            token = value
+            break
+    
+    if token:
+        response = session.get(url, params={'id': file_id, 'confirm': token}, stream=True)
+    
+    with open(destination, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=32768):
+            if chunk:
+                f.write(chunk)
+
 def download_data():
+    os.makedirs('data', exist_ok=True)
+    
     files = {
         'data/engineered_data.csv': '1CW0uB5CmM1KJ79Sj_4yvXIwaxCbialOl',
         'data/cleaned_data.csv': '1YFMcUbtPS_twvqPDD601X3xrkJfrgY2L'
     }
     
-    os.makedirs('data', exist_ok=True)
-    
     for filepath, file_id in files.items():
         if not os.path.exists(filepath):
-            url = f'https://drive.google.com/uc?export=download&id={file_id}&confirm=t'
-            response = requests.get(url, stream=True)
-            with open(filepath, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
+            print(f"Downloading {filepath}...")
+            download_file_from_google_drive(file_id, filepath)
             print(f"{filepath} downloaded!")
 
 download_data()
