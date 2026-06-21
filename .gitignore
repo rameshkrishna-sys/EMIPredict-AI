@@ -7,3 +7,4 @@ mlruns/
 *.pkl
 data/
 models/
+emi_dataset.csv

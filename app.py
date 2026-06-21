@@ -4,6 +4,57 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+
+import gdown
+
+def download_data():
+    if not os.path.exists('data/engineered_data.csv'):
+        os.makedirs('data', exist_ok=True)
+        url = 'https://drive.google.com/uc?id=1CW0uB5CmM1KJ79Sj_4yvXIwaxCbialOl'
+        gdown.download(url, 'data/engineered_data.csv', quiet=False)
+
+download_data()
+
+def load_or_train_models():
+    if not os.path.exists('models/best_classifier.pkl'):
+        os.makedirs('models', exist_ok=True)
+        
+        # Load and prepare data
+        df = pd.read_csv('data/engineered_data.csv')
+        X = df.drop(columns=['emi_eligibility', 'emi_eligibility_encoded', 'max_monthly_emi'])
+        y_class = df['emi_eligibility_encoded']
+        y_reg = df['max_monthly_emi']
+        
+        from sklearn.model_selection import train_test_split
+        from sklearn.preprocessing import StandardScaler
+        from xgboost import XGBClassifier, XGBRegressor
+        
+        X_train, _, y_class_train, _, y_reg_train, _ = train_test_split(
+            X, y_class, y_reg, test_size=0.30, random_state=42, stratify=y_class)
+        
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        
+        clf = XGBClassifier(n_estimators=100, learning_rate=0.1, 
+                            max_depth=6, random_state=42)
+        clf.fit(X_train_scaled, y_class_train)
+        
+        reg = XGBRegressor(n_estimators=100, learning_rate=0.1,
+                           max_depth=6, random_state=42)
+        reg.fit(X_train_scaled, y_reg_train)
+        
+        joblib.dump(clf, 'models/best_classifier.pkl')
+        joblib.dump(reg, 'models/best_regressor.pkl')
+        joblib.dump(scaler, 'models/scaler.pkl')
+    
+    clf = joblib.load('models/best_classifier.pkl')
+    reg = joblib.load('models/best_regressor.pkl')
+    scaler = joblib.load('models/scaler.pkl')
+    return clf, reg, scaler
+
+# Replace the model loading lines with this
+clf, reg, scaler = load_or_train_models()
 
 # Page config
 st.set_page_config(
