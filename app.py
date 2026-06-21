@@ -253,7 +253,7 @@ elif page == "Predict EMI":
         col1.metric("Disposable Income", f"₹{disposable_income:,.0f}")
         col2.metric("Total Expenses", f"₹{total_monthly_expenses:,.0f}")
         col3.metric("Total Savings", f"₹{total_savings:,.0f}")
-
+        
 elif page == "Data Explorer":
     st.title("Data Explorer 📊")
     
@@ -344,6 +344,11 @@ elif page == "Data Explorer":
     ax.spines['right'].set_visible(False)
     plt.tight_layout()
     st.pyplot(fig)
+    
+elif page == "Model Performance":
+    st.title("Model Performance 📈")
+    
+    st.markdown("---")
     
     # Classification Results
     st.subheader("Classification Models Comparison")
