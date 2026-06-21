@@ -7,40 +7,16 @@ import seaborn as sns
 import os
 import requests
 
-def download_file_from_google_drive(file_id, destination):
-    session = requests.Session()
-    url = 'https://drive.google.com/uc?export=download'
-    
-    response = session.get(url, params={'id': file_id}, stream=True)
-    
-    # Handle large file confirmation token
-    token = None
-    for key, value in response.cookies.items():
-        if key.startswith('download_warning'):
-            token = value
-            break
-    
-    if token:
-        response = session.get(url, params={'id': file_id, 'confirm': token}, stream=True)
-    
-    with open(destination, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=32768):
-            if chunk:
-                f.write(chunk)
-
 def download_data():
-    os.makedirs('data', exist_ok=True)
-    
-    files = {
-        'data/engineered_data.csv': '1CW0uB5CmM1KJ79Sj_4yvXIwaxCbialOl',
-        'data/cleaned_data.csv': '1YFMcUbtPS_twvqPDD601X3xrkJfrgY2L'
-    }
-    
-    for filepath, file_id in files.items():
-        if not os.path.exists(filepath):
-            print(f"Downloading {filepath}...")
-            download_file_from_google_drive(file_id, filepath)
-            print(f"{filepath} downloaded!")
+    if not os.path.exists('data/engineered_data.csv'):
+        os.makedirs('data', exist_ok=True)
+        file_id = '1CW0uB5CmM1KJ79Sj_4yvXIwaxCbialOl'
+        url = f'https://drive.google.com/uc?export=download&id={file_id}&confirm=t'
+        response = requests.get(url, stream=True)
+        with open('data/engineered_data.csv', 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        print("Data downloaded successfully!")
 
 download_data()
 
@@ -281,11 +257,9 @@ elif page == "Predict EMI":
 elif page == "Data Explorer":
     st.title("Data Explorer 📊")
     
-    df = pd.read_csv('data/cleaned_data.csv')
-    
     st.subheader("Dataset Overview")
     col1, col2, col3 = st.columns(3)
-    col1.metric("Total Records", f"{len(df):,}")
+    col1.metric("Total Records", "404,800")
     col2.metric("Features", "25")
     col3.metric("EMI Scenarios", "5")
     
@@ -294,75 +268,59 @@ elif page == "Data Explorer":
     # Plot 1 - Eligibility Distribution
     st.subheader("EMI Eligibility Distribution")
     fig, ax = plt.subplots(figsize=(8, 5))
-    colors = ['#2ecc71', '#e74c3c', '#f39c12']
-    counts = df['emi_eligibility'].value_counts()
-    bars = ax.barh(counts.index, counts.values, color=colors, edgecolor='white', height=0.5)
-    for bar, val in zip(bars, counts.values):
+    categories = ['Not Eligible', 'Eligible', 'High Risk']
+    values = [312868, 74444, 17488]
+    colors = ['#e74c3c', '#2ecc71', '#f39c12']
+    bars = ax.barh(categories, values, color=colors, edgecolor='white', height=0.5)
+    for bar, val in zip(bars, values):
         ax.text(val + 500, bar.get_y() + bar.get_height()/2,
-                f'{val:,} ({val/len(df)*100:.1f}%)',
+                f'{val:,} ({val/404800*100:.1f}%)',
                 va='center', fontsize=11, fontweight='bold')
     ax.set_xlabel("Count", fontsize=12)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.set_xlim(0, counts.max() * 1.25)
+    ax.set_xlim(0, 380000)
     plt.tight_layout()
     st.pyplot(fig)
     
     st.markdown("---")
     
-    # Plot 2 - Salary Distribution
-    st.subheader("Monthly Salary Distribution by Eligibility")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    colors = {'Eligible': '#2ecc71', 'High_Risk': '#f39c12', 'Not_Eligible': '#e74c3c'}
-    for eligibility, group in df.groupby('emi_eligibility'):
-        ax.hist(group['monthly_salary'], bins=40, alpha=0.65,
-                label=eligibility, color=colors[eligibility], edgecolor='none')
-    ax.set_xlabel("Monthly Salary (INR)", fontsize=12)
-    ax.set_ylabel("Count", fontsize=12)
-    ax.legend(fontsize=11, framealpha=0.5)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'₹{x/1000:.0f}K'))
-    plt.tight_layout()
-    st.pyplot(fig)
-    
-    st.markdown("---")
-    
-    # Plot 3 - EMI Scenario Pie
+    # Plot 2 - EMI Scenario Distribution
     st.subheader("EMI Scenario Distribution")
     fig, ax = plt.subplots(figsize=(8, 6))
-    scenario_counts = df['emi_scenario'].value_counts()
+    scenarios = ['E-commerce\nShopping EMI', 'Home\nAppliances EMI', 
+                 'Vehicle EMI', 'Personal\nLoan EMI', 'Education EMI']
+    counts = [80000, 80000, 80000, 80000, 80000]
     colors_pie = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6']
     wedges, texts, autotexts = ax.pie(
-        scenario_counts.values,
-        labels=scenario_counts.index,
-        autopct='%1.1f%%',
-        startangle=90,
-        colors=colors_pie,
+        counts, labels=scenarios, autopct='%1.1f%%',
+        startangle=90, colors=colors_pie,
         wedgeprops={'edgecolor': 'white', 'linewidth': 2},
-        pctdistance=0.82
-    )
+        pctdistance=0.82)
     for text in texts:
-        text.set_fontsize(11)
+        text.set_fontsize(10)
     for autotext in autotexts:
         autotext.set_fontsize(10)
         autotext.set_fontweight('bold')
         autotext.set_color('white')
-    ax.axis('equal')
     plt.tight_layout()
     st.pyplot(fig)
     
     st.markdown("---")
     
-    # Plot 4 - Credit Score vs Eligibility
-    st.subheader("Credit Score vs Eligibility")
-    fig, ax = plt.subplots(figsize=(9, 5))
-    colors_box = ['#2ecc71', '#f39c12', '#e74c3c']
-    order = ['Eligible', 'High_Risk', 'Not_Eligible']
-    sns.violinplot(data=df, x='emi_eligibility', y='credit_score',
-                   order=order, palette=colors_box, ax=ax, inner='quartile')
-    ax.set_xlabel("Eligibility", fontsize=12)
-    ax.set_ylabel("Credit Score", fontsize=12)
+    # Plot 3 - Salary by Eligibility
+    st.subheader("Average Salary by Eligibility")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    labels = ['Eligible', 'High Risk', 'Not Eligible']
+    salaries = [72600, 60000, 47100]
+    colors = ['#2ecc71', '#f39c12', '#e74c3c']
+    bars = ax.bar(labels, salaries, color=colors, edgecolor='white', width=0.5)
+    for bar, val in zip(bars, salaries):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 500,
+                f'₹{val:,}', ha='center', fontsize=11, fontweight='bold')
+    ax.set_ylabel("Monthly Salary (INR)", fontsize=12)
+    ax.set_ylim(0, 90000)
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'₹{x/1000:.0f}K'))
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     plt.tight_layout()
@@ -370,14 +328,22 @@ elif page == "Data Explorer":
     
     st.markdown("---")
     
-    # Raw data
-    st.subheader("Raw Data Preview")
-    st.dataframe(df.head(100), use_container_width=True)
-
-elif page == "Model Performance":
-    st.title("Model Performance 📈")
-    
-    st.markdown("---")
+    # Plot 4 - Employment Type
+    st.subheader("Approval Rate by Employment Type")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    emp_types = ['Government', 'Private', 'Self-employed']
+    approval_rates = [25, 18, 18]
+    colors = ['#3498db', '#2ecc71', '#f39c12']
+    bars = ax.bar(emp_types, approval_rates, color=colors, edgecolor='white', width=0.5)
+    for bar, val in zip(bars, approval_rates):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3,
+                f'{val}%', ha='center', fontsize=12, fontweight='bold')
+    ax.set_ylabel("Approval Rate (%)", fontsize=12)
+    ax.set_ylim(0, 35)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    plt.tight_layout()
+    st.pyplot(fig)
     
     # Classification Results
     st.subheader("Classification Models Comparison")
