@@ -5,14 +5,18 @@ import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-
-import gdown
+import requests
 
 def download_data():
     if not os.path.exists('data/engineered_data.csv'):
         os.makedirs('data', exist_ok=True)
-        url = 'https://drive.google.com/uc?id=1CW0uB5CmM1KJ79Sj_4yvXIwaxCbialOl'
-        gdown.download(url, 'data/engineered_data.csv', quiet=False)
+        file_id = '1CW0uB5CmM1KJ79Sj_4yvXIwaxCbialOl'
+        url = f'https://drive.google.com/uc?export=download&id={file_id}&confirm=t'
+        response = requests.get(url, stream=True)
+        with open('data/engineered_data.csv', 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        print("Data downloaded successfully!")
 
 download_data()
 
