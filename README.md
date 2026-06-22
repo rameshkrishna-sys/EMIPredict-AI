@@ -12,6 +12,20 @@ EMIPredict AI is a machine learning web application that predicts EMI loan eligi
 ## Problem Statement
 People struggle to pay EMI due to poor financial planning and inadequate risk assessment. This platform provides data-driven insights for better loan decisions.
 
+## Application Screenshots
+
+### Home Page
+![Home](images/home.png)
+
+### EMI Prediction
+![EMI Predict](images/emipredict.png)
+
+### Data Explorer
+![Data Explorer](images/Dataexplorer.png)
+
+### Model Performance
+![Model Performance](images/model.png)
+
 ## Features
 - ✅ EMI Eligibility Prediction (Eligible / High Risk / Not Eligible)
 - ✅ Maximum Monthly EMI Calculation
@@ -49,3 +63,29 @@ People struggle to pay EMI due to poor financial planning and inadequate risk as
 - **Version Control:** GitHub
 
 ## Project Structure
+
+EMIPredict-AI/
+
+├── app.py                  # Streamlit application
+
+├── Dataset_process.ipynb   # Step 1: Data preprocessing
+
+├── EDA.ipynb               # Step 2: Exploratory data analysis
+
+├── FE.ipynb                # Step 3: Feature engineering
+
+├── Model_training.ipynb    # Step 4: Model training
+
+├── requirements.txt        # Dependencies
+
+└── .gitignore
+
+## Key Findings
+- Dataset is highly imbalanced (77% Not Eligible)
+- Monthly salary is the strongest predictor of eligibility
+- Eligible customers earn 54% more than Not Eligible (₹72,600 vs ₹47,100)
+- Government employees have the highest approval rate (25%)
+- Bank balance and emergency fund are highly correlated (0.89)
+
+## Author
+Ramesh krishna 
