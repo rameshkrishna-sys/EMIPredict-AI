@@ -15,16 +15,16 @@ People struggle to pay EMI due to poor financial planning and inadequate risk as
 ## Application Screenshots
 
 ### Home Page
-![Home](images/home.png)
+![Home](images/home.jpg)
 
 ### EMI Prediction
-![EMI Predict](images/emipredict.png)
+![EMI Predict](images/emipredict.jpg)
 
 ### Data Explorer
-![Data Explorer](images/Dataexplorer.png)
+![Data Explorer](images/Dataexplorer.jpg)
 
 ### Model Performance
-![Model Performance](images/model.png)
+![Model Performance](images/model.jpg)
 
 ## Features
 - ✅ EMI Eligibility Prediction (Eligible / High Risk / Not Eligible)
